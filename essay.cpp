@@ -2,11 +2,12 @@
 //
 
 #include <iostream>
-#include "y-unit.h"
+#include "test-test.h"
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    std::cout << "Hello Essay!\n";
+    testTest();
 }
 
 // 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单

@@ -21,9 +21,15 @@
     <ClCompile Include="y-unit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="test-test.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="y-unit.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="test-test.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

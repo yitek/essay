@@ -17,14 +17,16 @@ class YExpect;
 class YTest;
 class YTestLogger;
 
-typedef void (*YTestExpectStatement)(YExpect&);
-typedef void (*YTestStatement)(YTest&);
+typedef void (*YTestExpectStatement)(YExpect);
+typedef void (*YTestStatement)(YTest);
 
 
 enum YTestValueKinds {
 	None,
 	Float,
-	Integer
+	Integer,
+	Pointer,
+	String
 };
 
 class YTestValue {
@@ -32,38 +34,32 @@ private:
 	YTestValueKinds _kind;
 	union {
 		double _float;
-		void* _integer;
+		long long _integer;
+		void* _pointer;
 	};
 	// char members[0];
 public:
 	YTestValue() :_kind(YTestValueKinds::None) { _integer = 0; };
-	YTestValue(int value) :_kind(YTestValueKinds::Integer), _integer((void*)value) {};
-	YTestValue(const void* value) :_kind(YTestValueKinds::Integer), _integer((void*)value) {};
+	YTestValue(int value) :_kind(YTestValueKinds::Integer), _integer(value) {};
+	YTestValue(const void* value) :_kind(YTestValueKinds::Pointer), _pointer((void*)value) {};
+	YTestValue(const char* value);
 	YTestValue(float value) :_kind(YTestValueKinds::Float), _float(value) {};
 	YTestValue(double value) :_kind(YTestValueKinds::Float), _float(value) {};
-	YTestValue(YTestValue& other) {
-		this->_kind = other._kind;
-		if (other._kind == YTestValueKinds::Integer) this->_integer = other._integer;
-		else if (other._kind == YTestValueKinds::Float) this->_float = other._float;
-		else this->_integer = 0;
-	};
-	YTestValue& operator=(const YTestValue& other) {
-		this->_kind = other._kind;
-		if (other._kind == YTestValueKinds::Integer) this->_integer = other._integer;
-		if (other._kind == YTestValueKinds::Float) this->_float = other._float;
-		return *this;
-	};
+	YTestValue(YTestValue& other);
+	YTestValue& operator=(const YTestValue& other);
 
+	/*
 	YTestValue& operator=(int value) {
 		this->_kind = YTestValueKinds::Integer;
-		this->_integer = (void*)value;
+		this->_integer = value;
 		return *this;
 	};
 	YTestValue& operator=(const void* value) {
-		this->_kind = YTestValueKinds::Integer;
-		this->_integer = (void*)value;
+		this->_kind = YTestValueKinds::Pointer;
+		this->_pointer = (void*) value;
 		return *this;
 	};
+	
 	YTestValue& operator=(float value) {
 		this->_kind = YTestValueKinds::Float;
 		this->_float = (double)value;
@@ -73,17 +69,10 @@ public:
 		this->_kind = YTestValueKinds::Float;
 		this->_float = (double)value;
 		return *this;
-	};
+	};*/
 	
-	bool operator==(YTestValue second) {
-		YTestValue& first = *this;
-		if (first._kind == second._kind) {
-			if (first._kind == YTestValueKinds::Integer) return first._integer == first._integer;
-			if (first._kind == YTestValueKinds::Float) return first._float == first._float;
-			return true;
-		}
-		return false;
-	};
+	bool operator==(YTestValue second);
+	~YTestValue();
 };
 
 
@@ -121,19 +110,23 @@ public:
 	YTestCase* test() { return this->_case; }
 
 	YTestAssert& toBe(int expected) {
-		this->_status = (this->_actual = expected)==this->_expected?1:0;
+		this->_status = (this->_expected = expected)==this->_actual ?1:0;
 		return *this;
 	}
 	YTestAssert& toBe(void* expected) {
-		this->_status = (this->_actual = expected) == this->_expected ? 1 : 0;
+		this->_status = (this->_expected = expected) == this->_actual ? 1 : 0;
 		return *this;
 	}
 	YTestAssert& toBe(float expected) {
-		this->_status = (this->_actual = expected) == this->_expected ? 1 : 0;
+		this->_status = (this->_expected = expected) == this->_actual ? 1 : 0;
 		return *this;
 	}
 	YTestAssert& toBe(double expected) {
-		this->_status = (this->_actual = expected) == this->_expected ? 1 : 0;
+		this->_status = (this->_expected = expected) == this->_actual ? 1 : 0;
+		return *this;
+	}
+	YTestAssert& toBe(const char* expected) {
+		this->_status = (this->_expected = expected) == this->_actual ? 1 : 0;
 		return *this;
 	}
 	~YTestAssert();
@@ -158,13 +151,25 @@ public:
 	int total() { return _total; }
 	int fail() { return _fail; }
 	int success() { return _success; }
-	int ellapse() { return _endAt - _beginAt; }
+	double ellapse() { return (_endAt - _beginAt); }
 };
-
+class YTestDescription {
+private:
+	friend YTestCase;
+	const char* _text;
+	YTestDescription* _next;
+public:
+	YTestDescription(const char* text);
+	~YTestDescription();
+	YTestDescription* next() { return this->_next; }
+	const char* text() { return this->_text; }
+};
 class YTestCase:public YTestCounter {
 private:
 	YTestCase* _parent;
 	const char* _name;
+	YTestDescription* _firstDescription;
+	YTestDescription* _lastDescription;
 	YTestCase* _nextSibling;
 	YTestAssert* _firstAssert;
 	YTestAssert* _lastAssert;
@@ -185,7 +190,8 @@ public:
 	
 	YTestCase(const char* name, YTestStatement statement, YTestLogger* logger = 0);
 	YTestCase(YTestStatement statement, YTestLogger* logger = 0);
-
+	YTestDescription* appendDescription(const char* text);
+	YTestDescription* description() { return this->_firstDescription; }
 	YTestAssert* appendAssert(YTestValue actual) {
 		YTestAssert* assert = new YTestAssert(this, actual);
 		if (this->_lastAssert) {
@@ -218,10 +224,16 @@ private:
 	YTestCase* _case;
 public:
 	YExpect(YTestCase* yc) :_case(yc) {};
-	YTestAssert* operator()(int actual) { return this->_case->appendAssert(actual); };
-	YTestAssert* operator()(const void* actual) { return this->_case->appendAssert(actual); };
-	YTestAssert* operator()(float actual) { return this->_case->appendAssert(actual); };
-	YTestAssert* operator()(double actual) { return this->_case->appendAssert(actual); };
+	YTestAssert& operator()(int actual) { return *this->_case->appendAssert(actual); };
+	YTestAssert& operator()(const void* actual) { return *this->_case->appendAssert(actual); };
+	YTestAssert& operator()(const char* actual) { return *this->_case->appendAssert(actual); };
+	YTestAssert& operator()(float actual) { return *this->_case->appendAssert(actual); };
+	YTestAssert& operator()(double actual) { return *this->_case->appendAssert(actual); };
+	YExpect operator<<(const char* text) {
+		this->_case->appendDescription(text);
+		return *this;
+	};
+	
 };
 
 class YTest {
@@ -229,15 +241,20 @@ private:
 	YTestCase* _parent;
 public:
 	YTest(YTestCase* parent) :_parent(parent) {};
-	YTestCase* operator()(const char* name, YTestExpectStatement statement) {
-		return this->_parent->appendChild(name, statement);
+	YTestCase& operator()(const char* name, YTestExpectStatement statement) {
+		return *this->_parent->appendChild(name, statement);
 	};
-	YTestCase* operator()(const char* name, YTestStatement statement) {
+	YTestCase& operator()(const char* name, YTestStatement statement) {
 		YTestCase* child = this->_parent->appendChild(name);
 		YTest test(child);
 		statement(test);
-		return child;
+		return *child;
 	};
+	YTest operator<<(const char* text) {
+		this->_parent->appendDescription(text);
+		return *this;
+	};
+	
 };
 
 class YTestLogger {
