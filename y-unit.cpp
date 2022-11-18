@@ -95,7 +95,7 @@ void YTestCounter::counterEnd() {
 	this->_endAt = time(NULL);
 }
 
-YTestDescription::YTestDescription(const char* text) :_next(0) {
+YTestDescription::YTestDescription(YTestCase* tcase,const char* text) :_next(0),_case(tcase) {
 	if (text) {
 		int bytes = strlen(text) + 1;
 		this->_text = (char*)malloc(bytes);
@@ -107,7 +107,7 @@ YTestDescription::~YTestDescription() {
 	if (this->_text) free((void*)this->_text);
 }
 
-YTestCase::YTestCase(const char* name,   YTestExpectStatement statement, YTestCase* parent, YTestLogger* logger):_parent(parent),_logger(logger?logger:y_defaultTestLogger), _firstAssert(0), _lastAssert(0), _nextSibling(0), _firstChild(0), _lastChild(0), _statement(statement),_childCount(0),_firstDescription(0),_lastDescription(0), YTestCounter() {
+YTestCase::YTestCase(const char* name,   YTestExpectStatement statement, YTestCase* parent, YTestManager* manager):_parent(parent),_manager(manager), _firstAssert(0), _lastAssert(0), _nextSibling(0), _firstChild(0), _lastChild(0), _statement(statement),_childCount(0),_firstDescription(0),_lastDescription(0), YTestCounter() {
 	if (name != 0) {
 		int bytes = strlen(name) + 1;
 		this->_name = (char*)malloc(bytes);
@@ -118,23 +118,15 @@ YTestCase::YTestCase(const char* name,   YTestExpectStatement statement, YTestCa
 	this->_deep = parent ? parent->_deep + 1 : 0;
 }
 
-YTestCase::YTestCase(const char* name, YTestStatement statement, YTestLogger* logger) :YTestCase(name, 0, 0, logger) {
+YTestCase::YTestCase(const char* name, YTestStatement statement, YTestManager* manager) :YTestCase(name, 0, 0, manager) {
 	YTest test(this);
 	statement(test);
 }
-YTestCase::YTestCase(YTestStatement statement, YTestLogger* logger) :YTestCase(0, 0, 0, logger) {
+YTestCase::YTestCase(YTestStatement statement, YTestManager* manager) :YTestCase(0, 0, 0, manager) {
 	YTest test(this);
 	statement(test);
 }
 
-YTestDescription* YTestCase::appendDescription(const char* text) {
-	YTestDescription* des = new YTestDescription(text);
-	if (this->_lastDescription) {
-		this->_lastDescription = this->_lastDescription->_next = des;
-	}
-	else this->_firstDescription = this->_lastDescription = des;
-	return des;
-}
 
 
 YTestCase::~YTestCase() {
@@ -163,19 +155,31 @@ YTestCase::~YTestCase() {
 			item = next;
 		}
 	}
+	
 }
 
-void YTestCase::Execute() {
-	this->_logger->beginTest(this);
+void YTestCase::execute() {
+	this->logger()->beginTest(this);
+	YTestDescription* des = this->_firstDescription;
+	while (des) {
+		this->logger()->description(des);
+		des = des->_next;
+	}
+
 	this->counterBegin();
 	if (this->_statement) {
 		YExpect expect(this);
 		this->_statement(expect);
-
+		des = this->_firstDescription;
+		while (des) {
+			this->logger()->description(des);
+			des = des->_next;
+		}
 		
 		YTestAssert* assert= this->_firstAssert;
+		if (assert) this->logger()->br("ASSERTS", this);
 		while (assert) {
-			this->_logger->assert(assert);
+			this->logger()->assert(assert);
 			if (assert->status()==1) this->succeed();
 			else if(assert->status()==0)this->failed();
 			assert = assert->_nextSibling;
@@ -186,7 +190,8 @@ void YTestCase::Execute() {
 	
 		YTestCase* child = this->_firstChild;
 		while (child) {
-			child->Execute();
+			child->execute();
+			
 			if (child->pass()) this->succeed();
 			else this->failed();
 			child = child->_nextSibling;
@@ -194,8 +199,12 @@ void YTestCase::Execute() {
 		
 	}
 	this->counterEnd();
-	this->_logger->endTest(this);
+	this->logger()->endTest(this);
 }
+
+YTestLogger* YTestCase::logger() { return this->_manager->logger(); }
+
+
 void tabs(int deep) {
 	for (int i = 0; i < deep; i++) {
 		cout << "\t";
@@ -209,20 +218,21 @@ void jn(int deep) {
 	cout << " ";
 }
 void colorBegin(int deep) {
-	if(deep==0)cout << "\033[33;1m";
-	else if(deep==1) cout << "\033[36;1m";
-	else cout << "\033[36;1m";
+	if(deep==0)cout << "\033[43;1m";
+	else if(deep==1) cout << "\033[46;1m";
+	else cout << "\033[46;1m";
 }
 void colorEnd() {
-	cout << "\033[1m";
+	cout << "\033[0m";
 }
 class YTestDefaultLogger :public YTestLogger {
 	virtual void beginTest(YTestCase* test) {
-		colorBegin(test->deep());
+		if (test->deep()) cout << endl;
 		tabs(test->deep());
 		jn(test->deep());
+		colorBegin(test->deep());
 		if (test->name())cout << test->name();
-		
+		colorEnd();
 		cout << endl;
 		
 
@@ -230,7 +240,7 @@ class YTestDefaultLogger :public YTestLogger {
 		if (test->deep() == 1)cout << "----------------" << endl;
 		else if (test->deep() == 0) cout << "================" << endl;
 		else  cout << endl;
-		colorEnd();
+		
 	};
 	virtual void endTest(YTestCase* test) {
 		
@@ -243,20 +253,18 @@ class YTestDefaultLogger :public YTestLogger {
 		if (test->pass()) {
 
 			
-			if (test->deep())cout << "\033[36;1m";
-			else cout << "\033[33;1m** ";
+			if (test->deep())cout << "*** \033[36;1m";
+			else cout << "*** \033[33;1m";
 			if (test->name()) cout << test->name();
-			cout << " **\033[0m: total=" << test->total() << ", ellapsed=" << test->ellapse() << endl;
+			cout << "\033[0m ***: total=" << test->total() << ", ellapsed=" << test->ellapse()<<"." << endl;
 		}
 		else {
 			
-			cout << "\033[45;1m** ";
+			cout << "*** \033[35;1m";
 			if (test->name()) cout << test->name();
-			cout << " **\033[0m: total=" << test->total() << ", fail=\033[31;1m" << test->fail() << "\033[0m, ellapsed=" << test->ellapse() << endl ;
+			cout << "\033[0m ***: total=" << test->total() << ", fail=\033[41;1m" << test->fail() << "\033[0m, ellapsed=" << test->ellapse()<<"." << endl;
 		}
-		tabs(test->deep());
-		cout << "__________" << endl;
-		cout << endl;
+
 	}
 	virtual void assert(YTestAssert* assert) {
 		tabs(assert->test()->deep());
@@ -273,9 +281,50 @@ class YTestDefaultLogger :public YTestLogger {
 		}
 		cout << "\033[0m";
 	}
+
+	virtual void description(YTestDescription* des) {
+		tabs(des->testCase()->deep());
+		cout << des->text() << endl;
+	}
+
+	virtual void br(const char* txt,YTestCase* testCase) {
+		cout << endl;
+		tabs(testCase->deep());
+		cout << "\033[34;1m--- "<<txt<<" ---\033[0m" << endl<<endl;
+	}
 };
 YTestDefaultLogger defaultLogger;
 YTestLogger* y_defaultTestLogger = &defaultLogger;
+
+
+
+YTestCase& YTestManager::operator()(YTestStatement statement) {
+	YTestCase* tcase = new YTestCase(statement, this);
+	return this->appendTestCase(tcase);
+}
+YTestCase& YTestManager::operator()(const char* name, YTestStatement statement) {
+	YTestCase* tcase = new YTestCase(name, statement, this);
+	return this->appendTestCase(tcase);
+}
+YTestCase& YTestManager::operator()(YTestExpectStatement statement) {
+	YTestCase* tcase = new YTestCase(statement, this);
+	return this->appendTestCase(tcase);
+}
+YTestCase& YTestManager::operator()(const char* name, YTestExpectStatement statement) {
+	YTestCase* tcase = new YTestCase(name, statement, this);
+	return this->appendTestCase(tcase);
+}
+void YTestManager::execute() {
+	YTestCase* item = this->_firstCase;
+	while (item) {
+		item->execute();
+		item = item->_nextSibling;
+	}
+}
+
+YTestManager defaultTestManager;
+
+YTestManager& y_unit = defaultTestManager;
 
 
 

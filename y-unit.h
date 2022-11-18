@@ -15,6 +15,7 @@ class YTestAssert;
 class YTestCase;
 class YExpect;
 class YTest;
+class YTestManager;
 class YTestLogger;
 
 typedef void (*YTestExpectStatement)(YExpect);
@@ -48,28 +49,6 @@ public:
 	YTestValue(YTestValue& other);
 	YTestValue& operator=(const YTestValue& other);
 
-	/*
-	YTestValue& operator=(int value) {
-		this->_kind = YTestValueKinds::Integer;
-		this->_integer = value;
-		return *this;
-	};
-	YTestValue& operator=(const void* value) {
-		this->_kind = YTestValueKinds::Pointer;
-		this->_pointer = (void*) value;
-		return *this;
-	};
-	
-	YTestValue& operator=(float value) {
-		this->_kind = YTestValueKinds::Float;
-		this->_float = (double)value;
-		return *this;
-	};
-	YTestValue& operator=(double value) {
-		this->_kind = YTestValueKinds::Float;
-		this->_float = (double)value;
-		return *this;
-	};*/
 	
 	bool operator==(YTestValue second);
 	~YTestValue();
@@ -158,14 +137,17 @@ private:
 	friend YTestCase;
 	const char* _text;
 	YTestDescription* _next;
+	YTestCase* _case;
 public:
-	YTestDescription(const char* text);
+	YTestDescription(YTestCase* tcase,const char* text);
 	~YTestDescription();
 	YTestDescription* next() { return this->_next; }
 	const char* text() { return this->_text; }
+	YTestCase* testCase() { return this->_case; }
 };
 class YTestCase:public YTestCounter {
 private:
+	friend YTestManager;
 	YTestCase* _parent;
 	const char* _name;
 	YTestDescription* _firstDescription;
@@ -178,20 +160,28 @@ private:
 	YTestExpectStatement _statement;
 	int _childCount;
 	int _deep;
-	YTestLogger* _logger;
-	YTestCase(const char* name, YTestExpectStatement statement, YTestCase* parent, YTestLogger* logger);
-	YTestCase(const char* name, YTestExpectStatement statement, YTestCase* parent) :YTestCase(name, statement,parent, parent->_logger) {}
+	//YTestLogger* _logger;
+	YTestManager* _manager;
+	YTestCase(const char* name, YTestExpectStatement statement, YTestCase* parent,YTestManager* manager);
+	YTestCase(const char* name, YTestExpectStatement statement, YTestCase* parent) :YTestCase(name,statement,parent,parent->_manager){}
 	
 	
 public:
-	YTestCase(const char* name,  YTestExpectStatement statement, YTestLogger* logger=0) :YTestCase(name, statement,0,logger) {}
+	YTestCase(const char* name,  YTestExpectStatement statement, YTestManager* manager) :YTestCase(name, statement,0, manager) {}
 	
-	YTestCase(YTestExpectStatement statement, YTestLogger* logger = 0) :YTestCase(0, statement, 0, logger) {}
+	YTestCase(YTestExpectStatement statement, YTestManager* manager) :YTestCase(0, statement, 0, manager) {}
 	
-	YTestCase(const char* name, YTestStatement statement, YTestLogger* logger = 0);
-	YTestCase(YTestStatement statement, YTestLogger* logger = 0);
-	YTestDescription* appendDescription(const char* text);
-	YTestDescription* description() { return this->_firstDescription; }
+	YTestCase(const char* name, YTestStatement statement, YTestManager* manager);
+	YTestCase(YTestStatement statement, YTestManager* manager);
+	YTestDescription* appendDescription(const char* text) {
+		YTestDescription* des = new YTestDescription(this, text);
+		if (this->_lastDescription) {
+			this->_lastDescription = this->_lastDescription->_next = des;
+		}
+		else this->_lastDescription = this->_firstDescription = des;
+		return des;
+	}
+	
 	YTestAssert* appendAssert(YTestValue actual) {
 		YTestAssert* assert = new YTestAssert(this, actual);
 		if (this->_lastAssert) {
@@ -212,9 +202,11 @@ public:
 		return child;
 	};
 	const char* name() { return this->_name; }
+	YTestManager* manager() { return this->_manager; }
+	YTestLogger* logger();
 	int childCount() { return this->_childCount; }
 	bool pass() { return this->success() == this->total(); }
-	void Execute();
+	void execute();
 	int deep() { return _deep; };
 	bool isRoot() { return this->_parent == 0; }
 	~YTestCase();
@@ -257,33 +249,49 @@ public:
 	
 };
 
+
 class YTestLogger {
 public:
 	virtual void beginTest(YTestCase* test) = 0;
 	virtual void endTest(YTestCase* test) =0;
 	virtual void assert(YTestAssert* assert)=0;
+	virtual void description(YTestDescription* des) = 0;
+	virtual void br(const char* str, YTestCase* testCase) = 0;
 };
 extern YTestLogger* y_defaultTestLogger;
 
-inline void y_unit(YTestStatement statement, YTestLogger* logger = 0) {
-	YTestCase testCase(statement, logger);
-	testCase.Execute();
-};
 
-inline void y_unit(const char* name, YTestStatement statement, YTestLogger* logger = 0) {
-	YTestCase testCase(name, statement, logger);
-	testCase.Execute();
-};
 
-inline void y_unit(YTestExpectStatement statement, YTestLogger* logger = 0) {
-	YTestCase testCase(statement, logger);
-	testCase.Execute();
-};
+class YTestManager {
+private:
+	
+	YTestCase* _firstCase;
+	YTestCase* _lastCase;
+	YTestLogger* _logger;
+	YTestCase& appendTestCase(YTestCase* tcase) {
+		if (this->_lastCase) {
+			this->_lastCase = this->_lastCase->_nextSibling = tcase;
+		}
+		else this->_lastCase = this->_firstCase = tcase;
+		return *tcase;
+	}
+	
+public:
+	YTestManager() :_firstCase(0), _lastCase(0), _logger(0) {};
+	void execute();
 
-inline void y_unit(const char* name, YTestExpectStatement statement, YTestLogger* logger = 0) {
-	YTestCase testCase(name, statement,logger);
-	testCase.Execute();
-}
+	YTestCase& operator()(YTestStatement statement);
+	YTestCase& operator()(const char* name, YTestStatement statement);
+	YTestCase& operator()(YTestExpectStatement statement);
+	YTestCase& operator()(const char* name, YTestExpectStatement statement);
+	void operator()() { this->execute(); }
+
+	YTestLogger* logger() { return this->_logger == 0 ? y_defaultTestLogger : this->_logger; }
+	YTestManager& logger(YTestLogger* logger) { this->_logger = logger; return *this; }
+};
+//YTestManager* YTestManager::_singleon = 0;
+
+extern YTestManager& y_unit;
 
 
 

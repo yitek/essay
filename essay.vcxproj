@@ -128,7 +128,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="essay.cpp" />
-    <ClCompile Include="test-test.cpp" />
     <ClCompile Include="y-unit.cpp" />
   </ItemGroup>
   <ItemGroup>
