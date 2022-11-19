@@ -127,11 +127,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="s-type.c" />
     <ClCompile Include="essay.cpp" />
+    <ClCompile Include="s-heap.c" />
+    <ClCompile Include="uts\test-heap.cpp" />
     <ClCompile Include="y-unit.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="test-test.h" />
+    <ClInclude Include="s-array.h" />
+    <ClInclude Include="s-heap.h" />
+    <ClInclude Include="s-type.h" />
+    <ClInclude Include="uts\test-heap.h" />
+    <ClInclude Include="uts\test-test.h" />
     <ClInclude Include="y-unit.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

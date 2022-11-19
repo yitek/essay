@@ -1,7 +1,7 @@
 #pragma once
 #ifndef __TESTTEST_H__
 #define __TESTTEST_H__
-#include "y-unit.h"
+#include "../y-unit.h"
 
 #ifdef __cplusplus 
 extern "C" {
@@ -18,7 +18,7 @@ YTestManager& testTest() {
 		expect << "a simple test statement";
 		expect(1).toBe(1).message("1 eq 1");
 	});
-	
+
 	y_unit("named expects", [](YExpect expect) {
 		expect << "a named test statement";
 		expect("test").toBe("test").message("'test' eq 'test'");
