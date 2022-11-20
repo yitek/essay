@@ -1,6 +1,6 @@
-#include "s-heap.h"
 #include <malloc.h>
 #include <string.h>
+#include "s-heap.h"
 
 #ifdef STEST_INSPECT
 s_size s_testHeapAllocSize = -1;

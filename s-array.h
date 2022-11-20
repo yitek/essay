@@ -17,9 +17,11 @@ extern "C" {
 		return self->length;
 	}
 
-	inline void* s_array_at(SArray* const self, s_size at) {
-		return (at >= self->length)?0:(void*)(self->buffer + s_typeItemType(s_type((void*)self))->size * at);
+	inline void* s_array_get(SArray* const self, s_size index) {
+		return (index >= self->length)?0:(void*)(self->buffer + s_type_byvalSize(s_type_itemType(s_type(self))) * index);
 	}
+
+	SArray* s_array_set(SArray* const self, s_size index, void* item);
 
 	SArray* s_array_concat(SArray* const self, SArray* other);
 	SArray* s_array_slice(SArray* const self, s_size start, s_size length);

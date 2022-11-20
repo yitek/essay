@@ -1,6 +1,18 @@
 #include "s-array.h"
 #include "s-module.h"
 #include "s-machine.h"
+SArray* s_array_set(SArray* const self, s_size index, void* item) {
+	if (index >= self->length) return 0;
+	const SType* itemType = s_typeItemType(s_type((void*)self));
+	s_byte* pValue = (s_byte*)(self->buffer + s_type_byvalSize(itemType) * index);
+	if (itemType->flags && STypeFlags_ByVal) {
+		s_mem_copy(item, pValue, itemType->size);
+	}
+	else {
+		*(void**)pValue = item;
+	}
+}
+
 
 SArray* s_array_concat(SArray* const self, SArray* other) {
 	if (self == 0) return other;

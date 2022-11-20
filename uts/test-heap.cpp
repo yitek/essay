@@ -34,9 +34,9 @@ typedef struct {
 	int items[5];
 }STestIntArray5Items;
 
-const SType* s_testCreateIntArrayType() {
-	SType* intType = new SType{ sizeof(int) ,STypeFlags_ByVal,0,0,0,0,0 };
-	STestArrayGenericTypesType* genericTypes = new STestArrayGenericTypesType{ 1, {intType} };
+const SType* s_testCreateIntArrayType(size_t itemSize, unsigned int itemByValOrRef) {
+	SType* itemType = new SType{ itemSize ,itemByValOrRef,0,0,0,0,0 };
+	STestArrayGenericTypesType* genericTypes = new STestArrayGenericTypesType{ 1, {itemType} };
 	SType* arrType = new SType{
 		sizeof(s_size) // size
 		, STypeFlags_Array // flags
@@ -58,14 +58,21 @@ void s_testDestroyIntArrayType(const SType* type) {
 	delete type;
 }
 
-void testSHeap_default_newarr(SExpect expect) {
-	const SType* arrType = s_testCreateIntArrayType();
+void testSHeap_default_newarr(SExpect expect,int flag) {
+	s_size itemSize = sizeof(void*)*3;
+	const SType* arrType = s_testCreateIntArrayType(itemSize, flag);
 	
 	
 	void* obj = (int*)s_defaultHeap->newarr(s_defaultHeap, arrType, STEST_HEAP_ARRAY_LENGTH);
-	s_size expectedSize = (sizeof(SRef) + sizeof(s_size) + sizeof(int) * STEST_HEAP_ARRAY_LENGTH);
 
-	expect((s_size)s_testHeapAllocSize).toBe(expectedSize).message("Allocated size=SRef + Array + item-count");
+	s_size expectedSize = sizeof(SRef) + sizeof(s_size) + STEST_HEAP_ARRAY_LENGTH * (flag && STypeFlags_ByRef?sizeof(void*):itemSize);
+
+	if (flag && STypeFlags_ByRef) {
+		expect((s_size)s_testHeapAllocSize).toBe(expectedSize).message("Allocated size(byref-item)=sizeof(SRef) + sizeof(Array) + item-count * sizeof(void*)");
+	}
+	else {
+		expect((s_size)s_testHeapAllocSize).toBe(expectedSize).message("Allocated size(byval-item)=sizeof(SRef) + sizeof(Array) + item-count * sizeItem");
+	}
 	expect(obj).toBe((SRef*)s_testHeapAllocPointer+1).message("Object address =Allocated address + SRef");
 	expect(((SArrayHeader*)obj)->length).toBe(STEST_HEAP_ARRAY_LENGTH).message("The const attribute length is preset.");
 
@@ -73,5 +80,6 @@ void testSHeap_default_newarr(SExpect expect) {
 	expect(1).toBe(1).message("Can release the memory to heap by the address");
 	s_testDestroyIntArrayType(arrType);
 }
+
 
 
