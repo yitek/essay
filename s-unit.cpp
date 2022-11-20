@@ -1,4 +1,4 @@
-#include "y-unit.h"
+#include "s-unit.h"
 #include <malloc.h>
 #include <string.h>
 #include <time.h>
@@ -8,21 +8,21 @@ using namespace std;
 
 const char* const emptyStr = "";
 
-YTestValue::YTestValue(const char* value) :_kind(YTestValueKinds::String){
+STestValue::STestValue(const char* value) :_kind(STestValueKinds::String){
 	size_t bytes = strlen(value) +1;
 	this->_pointer = (char*)malloc(bytes);
 	if(this->_pointer) strcpy_s((char*)this->_pointer, bytes, value);
 };
 
-YTestValue::YTestValue(YTestValue& other) {
-	if (this->_kind == YTestValueKinds::String && this->_pointer) {
+STestValue::STestValue(STestValue& other) {
+	if (this->_kind == STestValueKinds::String && this->_pointer) {
 		free(this->_pointer);
 	}
 	this->_kind = other._kind;
-	if (other._kind == YTestValueKinds::Integer) this->_integer = other._integer;
-	else if (other._kind == YTestValueKinds::Float) this->_float = other._float;
-	else if ( other._kind == YTestValueKinds::Pointer) this->_pointer = other._pointer;
-	else if (other._kind == YTestValueKinds::String) {
+	if (other._kind == STestValueKinds::Integer) this->_integer = other._integer;
+	else if (other._kind == STestValueKinds::Float) this->_float = other._float;
+	else if ( other._kind == STestValueKinds::Pointer) this->_pointer = other._pointer;
+	else if (other._kind == STestValueKinds::String) {
 		if (other._pointer) {
 			size_t bytes = strlen((char*)other._pointer) + 1;
 			this->_pointer = (char*)malloc(bytes);
@@ -32,15 +32,15 @@ YTestValue::YTestValue(YTestValue& other) {
 	} else this->_integer = 0;
 };
 
-YTestValue& YTestValue::operator=(const YTestValue& other) {
-	if (this->_kind == YTestValueKinds::String && this->_pointer) {
+STestValue& STestValue::operator=(const STestValue& other) {
+	if (this->_kind == STestValueKinds::String && this->_pointer) {
 		free(this->_pointer);
 	}
 	this->_kind = other._kind;
-	if (other._kind == YTestValueKinds::Integer) this->_integer = other._integer;
-	else if (other._kind == YTestValueKinds::Float) this->_float = other._float;
-	else if (other._kind == YTestValueKinds::Pointer) this->_pointer = other._pointer;
-	else if (other._kind == YTestValueKinds::String) {
+	if (other._kind == STestValueKinds::Integer) this->_integer = other._integer;
+	else if (other._kind == STestValueKinds::Float) this->_float = other._float;
+	else if (other._kind == STestValueKinds::Pointer) this->_pointer = other._pointer;
+	else if (other._kind == STestValueKinds::String) {
 		if (other._pointer) {
 			size_t bytes = strlen((char*)other._pointer) + 1;
 			this->_pointer = (char*)malloc(bytes);
@@ -53,26 +53,26 @@ YTestValue& YTestValue::operator=(const YTestValue& other) {
 	return *this;
 };
 
-bool YTestValue::operator==(YTestValue second) {
-	YTestValue& first = *this;
+bool STestValue::operator==(STestValue second) {
+	STestValue& first = *this;
 	if (first._kind == second._kind) {
-		if (first._kind == YTestValueKinds::Integer) return first._integer == second._integer;
-		else if (first._kind == YTestValueKinds::Float) return first._float == second._float;
-		else if ( first._kind == YTestValueKinds::Pointer) return first._pointer == second._pointer;
-		else if (first._kind == YTestValueKinds::String) {
+		if (first._kind == STestValueKinds::Integer) return first._integer == second._integer;
+		else if (first._kind == STestValueKinds::Float) return first._float == second._float;
+		else if ( first._kind == STestValueKinds::Pointer) return first._pointer == second._pointer;
+		else if (first._kind == STestValueKinds::String) {
 			return strcmp((const char*)first._pointer, (const char*)second._pointer)==0;
 		}
 		return true;
 	}
 	return false;
 };
-YTestValue::~YTestValue() {
-	if (this->_kind == YTestValueKinds::String && this->_pointer) {
+STestValue::~STestValue() {
+	if (this->_kind == STestValueKinds::String && this->_pointer) {
 		free(this->_pointer);
 		this->_pointer = 0;
 	}
 };
-YTestAssert& YTestAssert::message(const char* message) {
+STestAssert& STestAssert::message(const char* message) {
 	if (this->_message) free((void*)this->_message);
 	if (message) {
 		long long bytes = strlen(message) + 1;
@@ -84,18 +84,18 @@ YTestAssert& YTestAssert::message(const char* message) {
 	return *this;
 }
 
-YTestAssert::~YTestAssert() {
+STestAssert::~STestAssert() {
 	if (this->_message) free((void*)this->_message);
 }
 
-void YTestCounter::counterBegin() {
+void STestCounter::counterBegin() {
 	this->_beginAt = time(NULL);
 }
-void YTestCounter::counterEnd() {
+void STestCounter::counterEnd() {
 	this->_endAt = time(NULL);
 }
 
-YTestDescription::YTestDescription(YTestCase* tcase,const char* text) :_next(0),_case(tcase) {
+STestDescription::STestDescription(STestCase* tcase,const char* text) :_next(0),_case(tcase) {
 	if (text) {
 		long long bytes = strlen(text) + 1;
 		this->_text = (char*)malloc(bytes);
@@ -103,11 +103,11 @@ YTestDescription::YTestDescription(YTestCase* tcase,const char* text) :_next(0),
 	}
 	else this->_text = 0;
 }
-YTestDescription::~YTestDescription() {
+STestDescription::~STestDescription() {
 	if (this->_text) free((void*)this->_text);
 }
 
-YTestCase::YTestCase(const char* name,   YTestExpectStatement statement, YTestCase* parent, YTestManager* manager):_parent(parent),_manager(manager), _firstAssert(0), _lastAssert(0), _nextSibling(0), _firstChild(0), _lastChild(0), _statement(statement),_childCount(0),_firstDescription(0),_lastDescription(0), YTestCounter() {
+STestCase::STestCase(const char* name,   STestExpectStatement statement, STestCase* parent, STestManager* manager):_parent(parent),_manager(manager), _firstAssert(0), _lastAssert(0), _nextSibling(0), _firstChild(0), _lastChild(0), _statement(statement),_childCount(0),_firstDescription(0),_lastDescription(0), STestCounter() {
 	if (name != 0) {
 		long long bytes = strlen(name) + 1;
 		this->_name = (char*)malloc(bytes);
@@ -118,39 +118,39 @@ YTestCase::YTestCase(const char* name,   YTestExpectStatement statement, YTestCa
 	this->_deep = parent ? parent->_deep + 1 : 0;
 }
 
-YTestCase::YTestCase(const char* name, YTestStatement statement, YTestManager* manager) :YTestCase(name, 0, 0, manager) {
-	YTest test(this);
+STestCase::STestCase(const char* name, STestStatement statement, STestManager* manager) :STestCase(name, 0, 0, manager) {
+	STest test(this);
 	statement(test);
 }
-YTestCase::YTestCase(YTestStatement statement, YTestManager* manager) :YTestCase(0, 0, 0, manager) {
-	YTest test(this);
+STestCase::STestCase(STestStatement statement, STestManager* manager) :STestCase(0, 0, 0, manager) {
+	STest test(this);
 	statement(test);
 }
 
 
 
-YTestCase::~YTestCase() {
+STestCase::~STestCase() {
 	if (this->_name) free((void*)this->_name);
 	if (this->_firstChild) {
-		YTestCase* child = this->_firstChild;
+		STestCase* child = this->_firstChild;
 		while (child) {
-			YTestCase* next = child->_nextSibling;
+			STestCase* next = child->_nextSibling;
 			delete child;
 			child = next;
 		}
 	}
 	if (this->_firstAssert) {
-		YTestAssert* assert = this->_firstAssert;
+		STestAssert* assert = this->_firstAssert;
 		while (assert) {
-			YTestAssert* next = assert->_nextSibling;
+			STestAssert* next = assert->_nextSibling;
 			delete assert;
 			assert = next;
 		}
 	}
 	if (this->_firstDescription) {
-		YTestDescription* item = this->_firstDescription;
+		STestDescription* item = this->_firstDescription;
 		while (item) {
-			YTestDescription* next = item->_next;
+			STestDescription* next = item->_next;
 			delete item;
 			item = next;
 		}
@@ -158,9 +158,9 @@ YTestCase::~YTestCase() {
 	
 }
 
-void YTestCase::execute() {
+void STestCase::execute() {
 	this->logger()->beginTest(this);
-	YTestDescription* des = this->_firstDescription;
+	STestDescription* des = this->_firstDescription;
 	while (des) {
 		this->logger()->description(des);
 		des = des->_next;
@@ -168,7 +168,7 @@ void YTestCase::execute() {
 
 	this->counterBegin();
 	if (this->_statement) {
-		YExpect expect(this);
+		SExpect expect(this);
 		this->_statement(expect);
 		des = this->_firstDescription;
 		while (des) {
@@ -176,7 +176,7 @@ void YTestCase::execute() {
 			des = des->_next;
 		}
 		
-		YTestAssert* assert= this->_firstAssert;
+		STestAssert* assert= this->_firstAssert;
 		if (assert) this->logger()->br("ASSERTS", this);
 		while (assert) {
 			this->logger()->assert(assert);
@@ -188,7 +188,7 @@ void YTestCase::execute() {
 	}
 	if (this->_firstChild) {
 	
-		YTestCase* child = this->_firstChild;
+		STestCase* child = this->_firstChild;
 		while (child) {
 			child->execute();
 			
@@ -202,7 +202,7 @@ void YTestCase::execute() {
 	this->logger()->endTest(this);
 }
 
-YTestLogger* YTestCase::logger() { return this->_manager->logger(); }
+STestLogger* STestCase::logger() { return this->_manager->logger(); }
 
 
 void tabs(int deep) {
@@ -225,8 +225,8 @@ void colorBegin(int deep) {
 void colorEnd() {
 	cout << "\033[0m";
 }
-class YTestDefaultLogger :public YTestLogger {
-	virtual void beginTest(YTestCase* test) {
+class YTestDefaultLogger :public STestLogger {
+	virtual void beginTest(STestCase* test) {
 		if (test->deep()) cout << endl;
 		tabs(test->deep());
 		jn(test->deep());
@@ -242,7 +242,7 @@ class YTestDefaultLogger :public YTestLogger {
 		else  cout << endl;
 		
 	};
-	virtual void endTest(YTestCase* test) {
+	virtual void endTest(STestCase* test) {
 		
 		cout << endl;
 		
@@ -266,7 +266,7 @@ class YTestDefaultLogger :public YTestLogger {
 		}
 
 	}
-	virtual void assert(YTestAssert* assert) {
+	virtual void assert(STestAssert* assert) {
 		tabs(assert->test()->deep());
 		if (assert->status()==1) {
 			cout << "+ \033[32;1m[OK]\033[0m ";
@@ -282,49 +282,49 @@ class YTestDefaultLogger :public YTestLogger {
 		cout << "\033[0m";
 	}
 
-	virtual void description(YTestDescription* des) {
+	virtual void description(STestDescription* des) {
 		tabs(des->testCase()->deep());
 		cout << des->text() << endl;
 	}
 
-	virtual void br(const char* txt,YTestCase* testCase) {
+	virtual void br(const char* txt,STestCase* testCase) {
 		cout << endl;
 		tabs(testCase->deep());
 		cout << "\033[34;1m--- "<<txt<<" ---\033[0m" << endl<<endl;
 	}
 };
 YTestDefaultLogger defaultLogger;
-YTestLogger* y_defaultTestLogger = &defaultLogger;
+STestLogger* y_defaultTestLogger = &defaultLogger;
 
 
 
-YTestCase& YTestManager::operator()(YTestStatement statement) {
-	YTestCase* tcase = new YTestCase(statement, this);
+STestCase& STestManager::operator()(STestStatement statement) {
+	STestCase* tcase = new STestCase(statement, this);
 	return this->appendTestCase(tcase);
 }
-YTestCase& YTestManager::operator()(const char* name, YTestStatement statement) {
-	YTestCase* tcase = new YTestCase(name, statement, this);
+STestCase& STestManager::operator()(const char* name, STestStatement statement) {
+	STestCase* tcase = new STestCase(name, statement, this);
 	return this->appendTestCase(tcase);
 }
-YTestCase& YTestManager::operator()(YTestExpectStatement statement) {
-	YTestCase* tcase = new YTestCase(statement, this);
+STestCase& STestManager::operator()(STestExpectStatement statement) {
+	STestCase* tcase = new STestCase(statement, this);
 	return this->appendTestCase(tcase);
 }
-YTestCase& YTestManager::operator()(const char* name, YTestExpectStatement statement) {
-	YTestCase* tcase = new YTestCase(name, statement, this);
+STestCase& STestManager::operator()(const char* name, STestExpectStatement statement) {
+	STestCase* tcase = new STestCase(name, statement, this);
 	return this->appendTestCase(tcase);
 }
-void YTestManager::execute() {
-	YTestCase* item = this->_firstCase;
+void STestManager::execute() {
+	STestCase* item = this->_firstCase;
 	while (item) {
 		item->execute();
 		item = item->_nextSibling;
 	}
 }
 
-YTestManager defaultTestManager;
+STestManager defaultTestManager;
 
-YTestManager& y_unit = defaultTestManager;
+STestManager& s_unit = defaultTestManager;
 
 
 

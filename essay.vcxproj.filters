@@ -24,7 +24,7 @@
     <ClCompile Include="essay.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="y-unit.cpp">
+    <ClCompile Include="s-unit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="s-type.c">
@@ -39,9 +39,12 @@
     <ClCompile Include="s-array.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="uts\test-array.cpp">
+      <Filter>源文件\uts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="y-unit.h">
+    <ClInclude Include="s-unit.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="s-type.h">
@@ -58,6 +61,9 @@
     </ClInclude>
     <ClInclude Include="s-array.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="uts\test-array.h">
+      <Filter>头文件\uts</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

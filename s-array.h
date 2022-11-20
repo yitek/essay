@@ -22,7 +22,7 @@ extern "C" {
 	}
 
 	SArray* s_array_concat(SArray* const self, SArray* other);
-
+	SArray* s_array_slice(SArray* const self, s_size start, s_size length);
 #ifdef __cplusplus 
 } // end extern "C"
 #endif

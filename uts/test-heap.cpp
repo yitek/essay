@@ -1,7 +1,7 @@
 #include "test-heap.h"
 #include "../s-heap.h"
 
-void testHeapDefaultInstance(YExpect expect) {
+void testHeapDefaultInstance(SExpect expect) {
 	/*int* pInt = (int*)s_defaultHeap->newobj(s_defaultHeap,);
 	expect(pInt == 0 ? 0 : 1).toBe(1).message("Can allocate a block memory from heap and return the allocated memory address.");
 	*pInt = 87 * 23;
@@ -10,7 +10,7 @@ void testHeapDefaultInstance(YExpect expect) {
 	expect(1).toBe(1).message("Can release the memory to heap by the address");*/
 }
 
-void testDefaultHeapNewObj(YExpect expect) {
+void testSHeap_default_newobj(SExpect expect) {
 	SType intType = { sizeof(int) };
 	int* obj = (int*)s_defaultHeap->newobj(s_defaultHeap,&intType);
 	expect((s_size)s_testHeapAllocSize).toBe(intType.size + sizeof(SRef)).message("Allocated size=SRef + Type.size");
@@ -27,24 +27,21 @@ void testDefaultHeapNewObj(YExpect expect) {
 }
 
 #define STEST_HEAP_ARRAY_LENGTH 5
-typedef struct  {
-	s_size length;
-	SType* items[1];
-}STestGenericTypesType;
+
 
 typedef struct {
 	s_size length;
-	int items[STEST_HEAP_ARRAY_LENGTH];
-}STest5IntArray;
+	int items[5];
+}STestIntArray5Items;
 
-void testDefaultHeapNewArr(YExpect expect) {
-	SType intType = { sizeof(int) ,STypeFlags_ByVal,0,0,0,0,0};
-	STestGenericTypesType genericTypes = { 1, {&intType} };
-	SType arrType = { 
+const SType* s_testCreateIntArrayType() {
+	SType* intType = new SType{ sizeof(int) ,STypeFlags_ByVal,0,0,0,0,0 };
+	STestArrayGenericTypesType* genericTypes = new STestArrayGenericTypesType{ 1, {intType} };
+	SType* arrType = new SType{
 		sizeof(s_size) // size
 		, STypeFlags_Array // flags
 		,0 // baseType
-		,(const SArrayHeader*) & genericTypes // genericTyeps
+		,(const SArrayHeader*)genericTypes // genericTyeps
 		,0 // module
 		,0 // name
 #ifndef __SMACHINE_H__
@@ -52,7 +49,20 @@ void testDefaultHeapNewArr(YExpect expect) {
 #endif
 		,0 // members
 	};
-	void* obj = (int*)s_defaultHeap->newarr(s_defaultHeap, &arrType, STEST_HEAP_ARRAY_LENGTH);
+	return arrType;
+}
+
+void s_testDestroyIntArrayType(const SType* type) {
+	delete ((STestArrayGenericTypesType*)type->genericArguments)->items[0];
+	delete ((STestArrayGenericTypesType*)type->genericArguments);
+	delete type;
+}
+
+void testSHeap_default_newarr(SExpect expect) {
+	const SType* arrType = s_testCreateIntArrayType();
+	
+	
+	void* obj = (int*)s_defaultHeap->newarr(s_defaultHeap, arrType, STEST_HEAP_ARRAY_LENGTH);
 	s_size expectedSize = (sizeof(SRef) + sizeof(s_size) + sizeof(int) * STEST_HEAP_ARRAY_LENGTH);
 
 	expect((s_size)s_testHeapAllocSize).toBe(expectedSize).message("Allocated size=SRef + Array + item-count");
@@ -61,6 +71,7 @@ void testDefaultHeapNewArr(YExpect expect) {
 
 	s_defaultHeap->delobj(s_defaultHeap, obj);
 	expect(1).toBe(1).message("Can release the memory to heap by the address");
+	s_testDestroyIntArrayType(arrType);
 }
 
 

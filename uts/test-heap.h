@@ -1,7 +1,8 @@
 #pragma once
 #ifndef __TESTHEAP_H__
 #define __TESTHEAP_H__
-#include "../y-unit.h"
+#include "../s-unit.h"
+#include "../s-type.h"
 
 #ifdef __cplusplus 
 extern "C" {
@@ -12,18 +13,31 @@ extern "C" {
 } // end extern "C"
 #endif
 
-void testDefaultHeapNewObj(YExpect expect);
-void testDefaultHeapNewArr(YExpect expect);
 
-inline YTestManager& testHeap() {
-	y_unit("Heap", [](YTest test) {
-		test("s_defaultHeap", [](YTest subscribe) {
-			subscribe("NewObj", testDefaultHeapNewObj);
-			subscribe("NewArr", testDefaultHeapNewArr);
+
+void testSHeap_default_newobj(SExpect expect);
+void testSHeap_default_newarr(SExpect expect);
+
+inline STestManager& testSHeap() {
+	s_unit("SHeap", [](STest test) {
+		test("s_defaultHeap", [](STest subscribe) {
+			subscribe("newobj", testSHeap_default_newobj);
+			subscribe("newarr", testSHeap_default_newarr);
 	}	);
 	});
-	return y_unit;
+	return s_unit;
 };
+
+typedef struct {
+	s_size length;
+	SType* items[1];
+}STestArrayGenericTypesType;
+
+const SType* s_testCreateIntArrayType();
+void s_testDestroyIntArrayType(const SType* type);
+
+
+
 
 
 

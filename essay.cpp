@@ -8,9 +8,9 @@
 int main()
 {
     std::cout << "Hello Essay!\n";
-    //testTest().execute();
-    testHeap();
-    y_unit();
+    // testTest().execute();
+    testSHeap();
+    s_unit();
 }
 
 
