@@ -5,12 +5,16 @@ SArray* s_array_set(SArray* const self, s_size index, void* item) {
 	if (index >= self->length) return 0;
 	const SType* itemType = s_typeItemType(s_type((void*)self));
 	s_byte* pValue = (s_byte*)(self->buffer + s_type_byvalSize(itemType) * index);
-	if (itemType->flags && STypeFlags_ByVal) {
+	if (itemType->flags & STypeFlags_ByVal) {
 		s_mem_copy(item, pValue, itemType->size);
 	}
 	else {
 		*(void**)pValue = item;
 	}
+}
+
+s_size s_array_index(SArray* const self, void* item) {
+	return -1;
 }
 
 
@@ -23,10 +27,39 @@ SArray* s_array_concat(SArray* const self, SArray* other) {
 	const SType* selfItemType = s_type_itemType(selfType);
 	const SType* otherItemType = s_type_itemType(s_type(other));
 	if (!s_type_assignableFrom(selfItemType, otherItemType)) return 0;
-	
 	SArray* arr = (SArray*)heap->newarr(heap, selfType, length);
-	heap->copyobj(heap, other, arr->buffer + self->length*s_type_byvalSize(selfItemType));
-	heap->copyobj(heap, other,arr->buffer);
+	int needStep = 0;
+	if (selfItemType->flags & STypeFlags_ByVal) {
+		if (selfItemType->size != otherItemType->size) needStep = 1;
+	}	
+	s_size itemSize = s_type_byvalSize(selfItemType);
+	s_size bytes = itemSize * self->length;
+	s_mem_copy(self->buffer, arr->buffer, bytes);
+
+	if (!needStep) {
+		s_mem_copy(other->buffer, arr->buffer + bytes, itemSize * other->length);
+	}
+	else {
+		s_size otherSize = otherItemType->size;
+		s_byte* at = arr->buffer + bytes;
+		s_size rest = itemSize - otherSize;
+		if (rest>0) {
+			for (int i = 0; i < other->length; i++) {
+				
+				s_mem_copy(other->buffer + otherSize * i, at, otherSize);
+				s_mem_zero(at + otherSize, rest);
+			}
+		}
+		else {
+			for (int i = 0; i < other->length; i++) {
+				at += itemSize * i;
+				s_mem_copy(other->buffer + otherSize * i, at, otherSize);
+				s_mem_zero(at + otherSize, rest);
+			}
+		}
+		
+	}
+	
 	return arr;
 }
 
@@ -36,7 +69,6 @@ SArray* s_array_slice(SArray* const self, s_size start, s_size length) {
 	const SType* type = s_type(self);
 	s_size itemSize = s_type_byvalSize(s_type_itemType(type));
 	SHeap* heap = s_type_heap(type);
-
 	SArray* arr = (SArray*)heap->newobj(heap,type,length);
 	s_mem_copy(arr->buffer,self->buffer + start* itemSize,length* itemSize);
 

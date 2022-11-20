@@ -22,6 +22,7 @@ extern "C" {
 	}SHeap;
 
 	void s_mem_copy(void* src, void* des , s_size size);
+	void s_mem_zero(void* target,s_size size);
 
 	extern SHeap* const s_defaultHeap;
 

@@ -22,7 +22,7 @@ void* defaultNewObj(SHeap* self, const SType*const type) {
 
 void* defaultNewArr(SHeap* self, const SType* const type, s_size length) {
 	const SType* itemType = s_typeItemType(type);
-	s_size itemSize = itemType->flags && STypeFlags_ByRef ? sizeof(s_pointer) : itemType->size;
+	s_size itemSize = itemType->flags & STypeFlags_ByRef ? sizeof(s_pointer) : itemType->size;
 	s_size size = sizeof(SRefMeta) + type->size + itemSize*length;
 	void* p = malloc(size);
 #ifdef STEST_INSPECT
@@ -43,7 +43,7 @@ void* defaultNewArr(SHeap* self, const SType* const type, s_size length) {
 void* defaultCopyObj(struct ESSAYHeap* const self, void* src, void* dest) {
 	const SType* type = s_type(self);
 	s_size size = type->size;
-	if (type->flags && STypeFlags_Array) {
+	if (type->flags & STypeFlags_Array) {
 		const SType* itemType = s_typeItemType(type);
 		s_size itemSize = 
 		size += *(s_size*)self * s_typeItemType(type)->size;
@@ -59,6 +59,10 @@ void defaultDelobj(SHeap* self, void* any) {
 
 void s_mem_copy( void* src, void* dest, s_size size) {
 	memcpy_s(dest, size, src, size);
+}
+
+void s_mem_zero(void* target, s_size size) {
+	memset(target, 0, size);
 }
 
 SHeap defaultHeap = { defaultDelobj, defaultNewObj ,defaultNewArr,defaultCopyObj };

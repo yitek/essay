@@ -107,7 +107,7 @@ extern "C" {
 	};
 
 	inline const s_size s_type_byvalSize(const SType* const type) {
-		return (type->flags && STypeFlags_ByVal) ? type->size : sizeof(s_pointer);
+		return (type->flags & STypeFlags_ByVal) ? type->size : sizeof(s_pointer);
 	};
 	
 	inline const SType* s_typeItemType(const SType* const type) {
