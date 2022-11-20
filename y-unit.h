@@ -2,6 +2,7 @@
 #ifndef __YUNIT_H__
 #define __YUNIT_H__
 
+#define YUNIT
 
 #ifdef __cplusplus 
 extern "C" {
@@ -42,6 +43,8 @@ private:
 public:
 	YTestValue() :_kind(YTestValueKinds::None) { _integer = 0; };
 	YTestValue(int value) :_kind(YTestValueKinds::Integer), _integer(value) {};
+	YTestValue(long long value) :_kind(YTestValueKinds::Integer), _integer(value) {};
+	YTestValue(unsigned long long value) :_kind(YTestValueKinds::Integer), _integer(value) {};
 	YTestValue(const void* value) :_kind(YTestValueKinds::Pointer), _pointer((void*)value) {};
 	YTestValue(const char* value);
 	YTestValue(float value) :_kind(YTestValueKinds::Float), _float(value) {};
@@ -92,6 +95,14 @@ public:
 		this->_status = (this->_expected = expected)==this->_actual ?1:0;
 		return *this;
 	}
+	YTestAssert& toBe(long long expected) {
+		this->_status = (this->_expected = expected) == this->_actual ? 1 : 0;
+		return *this;
+	}
+	YTestAssert& toBe(unsigned long long expected) {
+		this->_status = (this->_expected = expected) == this->_actual ? 1 : 0;
+		return *this;
+	}
 	YTestAssert& toBe(void* expected) {
 		this->_status = (this->_expected = expected) == this->_actual ? 1 : 0;
 		return *this;
@@ -130,7 +141,7 @@ public:
 	int total() { return _total; }
 	int fail() { return _fail; }
 	int success() { return _success; }
-	double ellapse() { return (_endAt - _beginAt); }
+	unsigned long long ellapse() { return (_endAt - _beginAt); }
 };
 class YTestDescription {
 private:
@@ -217,6 +228,8 @@ private:
 public:
 	YExpect(YTestCase* yc) :_case(yc) {};
 	YTestAssert& operator()(int actual) { return *this->_case->appendAssert(actual); };
+	YTestAssert& operator()(long long actual) { return *this->_case->appendAssert(actual); };
+	YTestAssert& operator()(unsigned long long actual) { return *this->_case->appendAssert(actual); };
 	YTestAssert& operator()(const void* actual) { return *this->_case->appendAssert(actual); };
 	YTestAssert& operator()(const char* actual) { return *this->_case->appendAssert(actual); };
 	YTestAssert& operator()(float actual) { return *this->_case->appendAssert(actual); };

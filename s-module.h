@@ -7,7 +7,8 @@
 #ifdef __cplusplus 
 extern "C" {
 #endif
-	typedef struct ESSAYMachine;
+	struct ESSAYMachine;
+
 	typedef struct ESSAYModule {
 		s_size ocupiedSize;
 		struct ESSAYMachine* machine;

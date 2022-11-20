@@ -36,6 +36,9 @@
     <ClCompile Include="uts\test-heap.cpp">
       <Filter>源文件\uts</Filter>
     </ClCompile>
+    <ClCompile Include="s-array.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="y-unit.h">
@@ -52,6 +55,9 @@
     </ClInclude>
     <ClInclude Include="uts\test-heap.h">
       <Filter>头文件\uts</Filter>
+    </ClInclude>
+    <ClInclude Include="s-array.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

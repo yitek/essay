@@ -9,19 +9,19 @@ extern "C" {
 #endif
 
 	typedef struct ESSAYArray {
-		s_size length;
+		const s_size length;
 		s_byte buffer[0];
 	}SArray;
 
-	inline s_size array_length(const SArray* const self) {
+	inline s_size s_array_length(const SArray* const self) {
 		return self->length;
 	}
 
-	inline void* array_at(SArray* const self, s_size at) {
-		return (at >= self->length)?0:(void*)(self->buffer + ((SType*)((SArray*)s_type((void*)self)->genericArguments)->buffer)->size * at);
+	inline void* s_array_at(SArray* const self, s_size at) {
+		return (at >= self->length)?0:(void*)(self->buffer + s_typeItemType(s_type((void*)self))->size * at);
 	}
 
-	SArray* array_concat(SArray* const self, SArray* other);
+	SArray* s_array_concat(SArray* const self, SArray* other);
 
 #ifdef __cplusplus 
 } // end extern "C"

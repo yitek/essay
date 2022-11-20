@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="s-array.c" />
     <ClCompile Include="s-heap.c" />
     <ClCompile Include="s-type.c" />
     <ClCompile Include="essay.cpp" />
@@ -134,6 +135,7 @@
     <ClCompile Include="y-unit.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="s-array.h" />
     <ClInclude Include="s-heap.h" />
     <ClInclude Include="s-type.h" />
     <ClInclude Include="uts\test-heap.h" />

@@ -75,7 +75,7 @@ YTestValue::~YTestValue() {
 YTestAssert& YTestAssert::message(const char* message) {
 	if (this->_message) free((void*)this->_message);
 	if (message) {
-		int bytes = strlen(message) + 1;
+		long long bytes = strlen(message) + 1;
 		this->_message = (char*)malloc(bytes);
 		if (this->_message) strcpy_s((char*)this->_message, bytes, message);
 	}
@@ -97,7 +97,7 @@ void YTestCounter::counterEnd() {
 
 YTestDescription::YTestDescription(YTestCase* tcase,const char* text) :_next(0),_case(tcase) {
 	if (text) {
-		int bytes = strlen(text) + 1;
+		long long bytes = strlen(text) + 1;
 		this->_text = (char*)malloc(bytes);
 		if (this->_text) strcpy_s((char*)this->_text, bytes, text);
 	}
@@ -109,7 +109,7 @@ YTestDescription::~YTestDescription() {
 
 YTestCase::YTestCase(const char* name,   YTestExpectStatement statement, YTestCase* parent, YTestManager* manager):_parent(parent),_manager(manager), _firstAssert(0), _lastAssert(0), _nextSibling(0), _firstChild(0), _lastChild(0), _statement(statement),_childCount(0),_firstDescription(0),_lastDescription(0), YTestCounter() {
 	if (name != 0) {
-		int bytes = strlen(name) + 1;
+		long long bytes = strlen(name) + 1;
 		this->_name = (char*)malloc(bytes);
 		if (this->_name) strcpy_s((char*)this->_name, bytes, name);
 	}

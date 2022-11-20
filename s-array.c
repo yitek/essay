@@ -2,32 +2,31 @@
 #include "s-module.h"
 #include "s-machine.h"
 
-SArray* array_concat(SArray* const self, SArray* other,s_size additionalLength) {
+SArray* s_array_concat(SArray* const self, SArray* other) {
 	if (self == 0) return other;
 	if (other == 0) return self;
 	s_size length = self->length + other->length;
-	SType* type = s_type(self);
-	SHeap* heap = s_typeHeap(type);
-	SArray* arr = (SArray*)heap->newobj(heap, type, length + additionalLength);
-	arr->length = length;
-	//s_size selfSize = self->length * itemSize;
-	//s_mem_copy(self->buffer, arr->buffer, selfSize);
-	//s_mem_copy(other->buffer, arr->buffer + selfSize, other->length * itemSize);
-	//*(byte*)(str->buffer + length) = 0;
+	const SType* selfType = s_type(self);
+	SHeap* heap = s_type_heap(selfType);
+	const SType* selfItemType = s_type_itemType(selfType);
+	const SType* otherItemType = s_type_itemType(s_type(other));
+	if (!s_type_assignableFrom(selfItemType, otherItemType)) return 0;
+	
+	SArray* arr = (SArray*)heap->newarr(heap, selfType, length);
+	heap->copyobj(heap, other, arr->buffer + self->length*s_type_byvalSize(selfItemType));
+	heap->copyobj(heap, other,arr->buffer);
 	return arr;
 }
 
-SArray* array_slice(SArray* const self, s_size start, s_size length, s_size additionSize) {
+SArray* s_array_slice(SArray* const self, s_size start, s_size length) {
 	if (self == 0) return 0;
 	if (start + length >= self->length) return 0;
-	SType* type = s_type(self);
-	s_size itemSize = ((SType*)((SArray*)type->genericArguments)->buffer)->size;
-	SHeap* heap = s_typeHeap(type);
+	const SType* type = s_type(self);
+	s_size itemSize = s_type_byvalSize(s_type_itemType(type));
+	SHeap* heap = s_type_heap(type);
 
-	SArray* arr = (SArray*)heap->newobj(heap,type,length + additionSize);
-	arr->length = length;
-	//size_t sliceSize = length * elemSize;
-	// heap->copy(self->buffer + start * elemSize, arr->buffer, length * elemSize);
-	//*(char*)(arr->buffer + str->length) = 0;
+	SArray* arr = (SArray*)heap->newobj(heap,type,length);
+	s_mem_copy(arr->buffer,self->buffer + start* itemSize,length* itemSize);
+
 	return arr;
 }

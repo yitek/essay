@@ -13,6 +13,9 @@ void testHeapDefaultInstance(YExpect expect) {
 void testDefaultHeapNewObj(YExpect expect) {
 	SType intType = { sizeof(int) };
 	int* obj = (int*)s_defaultHeap->newobj(s_defaultHeap,&intType);
+	expect((s_size)s_testHeapAllocSize).toBe(intType.size + sizeof(SRef)).message("Allocated size=SRef + Type.size");
+	expect(obj).toBe((SRef*)s_testHeapAllocPointer + 1).message("Object address =Allocated address + SRef");
+
 	
 	expect(obj == 0 ? 0 : 1).toBe(1).message("Can allocate a block memory from heap and return the allocated memory address.");
 	if (!obj) return;
@@ -22,14 +25,42 @@ void testDefaultHeapNewObj(YExpect expect) {
 	s_defaultHeap->delobj(s_defaultHeap, obj);
 	expect(1).toBe(1).message("Can release the memory to heap by the address");
 }
+
+#define STEST_HEAP_ARRAY_LENGTH 5
 typedef struct  {
 	s_size length;
-	s_byte buffer[0];
-}STestArrayType;
-void testDefaultHeapNewArr(YExpect expect) {
-	SType intType = { sizeof(int) };
+	SType* items[1];
+}STestGenericTypesType;
 
-	SType intArrType = { sizeof(STestArrayType), STypeFlags_Indexable, };
-	// int* obj = (int*)s_defaultHeap->newobj(s_defaultHeap, &intType);
+typedef struct {
+	s_size length;
+	int items[STEST_HEAP_ARRAY_LENGTH];
+}STest5IntArray;
+
+void testDefaultHeapNewArr(YExpect expect) {
+	SType intType = { sizeof(int) ,STypeFlags_ByVal,0,0,0,0,0};
+	STestGenericTypesType genericTypes = { 1, {&intType} };
+	SType arrType = { 
+		sizeof(s_size) // size
+		, STypeFlags_Array // flags
+		,0 // baseType
+		,(const SArrayHeader*) & genericTypes // genericTyeps
+		,0 // module
+		,0 // name
+#ifndef __SMACHINE_H__
+		,s_defaultHeap
+#endif
+		,0 // members
+	};
+	void* obj = (int*)s_defaultHeap->newarr(s_defaultHeap, &arrType, STEST_HEAP_ARRAY_LENGTH);
+	s_size expectedSize = (sizeof(SRef) + sizeof(s_size) + sizeof(int) * STEST_HEAP_ARRAY_LENGTH);
+
+	expect((s_size)s_testHeapAllocSize).toBe(expectedSize).message("Allocated size=SRef + Array + item-count");
+	expect(obj).toBe((SRef*)s_testHeapAllocPointer+1).message("Object address =Allocated address + SRef");
+	expect(((SArrayHeader*)obj)->length).toBe(STEST_HEAP_ARRAY_LENGTH).message("The const attribute length is preset.");
+
+	s_defaultHeap->delobj(s_defaultHeap, obj);
+	expect(1).toBe(1).message("Can release the memory to heap by the address");
 }
+
 
