@@ -12,12 +12,16 @@ extern "C" {
 } // end extern "C"
 #endif
 
-void testHeapDefaultInstance(YExpect expect);
+void testDefaultHeapNewObj(YExpect expect);
+void testDefaultHeapNewArr(YExpect expect);
 
 inline YTestManager& testHeap() {
 	y_unit("Heap", [](YTest test) {
-		test("s_defaultHeap", testHeapDefaultInstance);
-		});
+		test("s_defaultHeap", [](YTest subscribe) {
+			subscribe("NewObj", testDefaultHeapNewObj);
+			subscribe("NewArr", testDefaultHeapNewArr);
+	}	);
+	});
 	return y_unit;
 };
 

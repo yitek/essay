@@ -44,16 +44,13 @@
     <ClInclude Include="s-type.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="s-array.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="uts\test-test.h">
+      <Filter>头文件\uts</Filter>
     </ClInclude>
     <ClInclude Include="s-heap.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="uts\test-heap.h">
-      <Filter>头文件\uts</Filter>
-    </ClInclude>
-    <ClInclude Include="uts\test-test.h">
       <Filter>头文件\uts</Filter>
     </ClInclude>
   </ItemGroup>

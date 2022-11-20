@@ -21,7 +21,7 @@ SType classType;
 const SType* const sClass = &classType;
 
 
-SType intType;
+SType intType = {.size = sizeof(int)};
 const SType*const sInt = &intType;
 STypeStrRef4 intName;
 

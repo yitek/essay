@@ -6,6 +6,7 @@
 extern "C" {
 #endif
 
+// #define s_typeHeap(type) (type->module->machine->heap)
 
 #define s_size unsigned long long
 #define s_byte unsigned char
@@ -34,19 +35,35 @@ extern "C" {
 // 是可以下标访问(c风格数组,a[2] == a + 2)
 #define STypeFlags_Indexable		(1<<4)
 
+	struct ESSAYRefMeta;
+	struct ESSAYRef;
+	struct ESSAYModule;
+	struct ESSAYType;
 	
-	typedef struct ESSAYType;
-	typedef struct ESSAYRef;
-	typedef struct ESSAYTypeArray;
-	typedef struct ESSAYTypeStr;
-	typedef struct ESSAYMember;
+	struct ESSAYTypeArray;
+	struct ESSAYTypeStr;
+	struct ESSAYMember;
+
+	typedef struct ESSAYRefMeta {
+		void* gc;
+		const struct ESSAYType* type;
+	}SRefMeta;
+	
+
+	typedef struct ESSAYRef {
+		void* gc;
+		const struct ESSAYType* type;
+		s_byte value[0];
+	}SRef;
+
 
 	typedef struct ESSAYType {
 		const s_size size;
 		const unsigned int flags;
-		const struct ESSAYTypeStr*const name; //类名
-		const struct ESSAYTypeArray* genericArguments; //泛型参数
 		const struct ESSAYType* baseType; // 基类
+		const struct ESSAYTypeArray* genericArguments; //泛型参数
+		const struct ESSAYModule* module;
+		const struct ESSAYTypeStr*const name; //类名
 		const struct ESSAYMember** members;
 	}SType;
 
@@ -58,19 +75,15 @@ extern "C" {
 	extern const SType* const sPointer;
 	extern const SType* const sObject; // 带虚函数的对象
 	
-
-	typedef struct ESSAYRef {
-		void* gc;
-		const SType* type;
-		s_byte value[];
-	}SRef;
-
-
-	inline const SRef* s_ref(const void*const any) { return ((SRef*)any) - 1;}
-
-	inline const SType*  s_type(const void*const any) { return (((SRef*)any) - 1)->type; }
 	
 
+	inline const SRef* s_ref(const void* const any) { return ((SRef*)any) - 1; };
+
+	inline const SType* const  s_type(const void* const any) { return (((SRef*)any) - 1)->type; };
+	
+	inline const SType* const s_typeItemType(const SType* const type) {
+		return (SType*)(((s_size*)type->genericArguments) + 1);
+	};
 
 
 
