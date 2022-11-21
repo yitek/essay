@@ -21,8 +21,8 @@ void* defaultNewObj(SHeap* self, const SType*const type) {
 }
 
 void* defaultNewArr(SHeap* self, const SType* const type, s_size length) {
-	const SType* itemType = s_typeItemType(type);
-	s_size itemSize = itemType->flags & STypeFlags_ByRef ? sizeof(s_pointer) : itemType->size;
+	const SType* itemType = s_type_itemType(type);
+	s_size itemSize = s_type_stackSize(itemType);
 	s_size size = sizeof(SRefMeta) + type->size + itemSize*length;
 	void* p = malloc(size);
 #ifdef STEST_INSPECT
@@ -43,10 +43,10 @@ void* defaultNewArr(SHeap* self, const SType* const type, s_size length) {
 void* defaultCopyObj(struct ESSAYHeap* const self, void* src, void* dest) {
 	const SType* type = s_type(self);
 	s_size size = type->size;
-	if (type->flags & STypeFlags_Array) {
-		const SType* itemType = s_typeItemType(type);
+	if (s_type_flagArray(type)) {
+		const SType* itemType = s_type_itemType(type);
 		s_size itemSize = 
-		size += *(s_size*)self * s_typeItemType(type)->size;
+		size += *(s_size*)self * (s_type_itemType(type)->size);
 	}
 	memcpy_s(dest, size, src, size);
 	return self;

@@ -52,6 +52,9 @@ public:
 	STestValue(STestValue& other);
 	STestValue& operator=(const STestValue& other);
 
+	bool isTruthy() { return this->_pointer != 0 || this->_integer != 0 || this->_pointer != 0; }
+
+	bool isFalsy() { return this->_pointer == 0 && this->_integer == 0 && this->_pointer == 0; }
 	
 	bool operator==(STestValue second);
 	~STestValue();
@@ -69,11 +72,13 @@ private:
 	const char* _message;
 	int _status;
 	STestCase* _case;
+	bool _isNot;
 	STestAssert(STestCase* const testCase) {
 		this->_status = -1;
 		this->_case = testCase;
 		this->_message = 0;
 		this->_nextSibling = 0;
+		this->_isNot = false;
 		
 	};
 protected:
@@ -95,6 +100,17 @@ public:
 		this->_status = (this->_expected = expected)==this->_actual ?1:0;
 		return *this;
 	}
+	STestAssert& toBeTruthy() {
+		this->_expected = 1;
+		this->_status = this->_actual.isTruthy();
+		return *this;
+	}
+	STestAssert& toBeFalsy() {
+		this->_expected = 1;
+		this->_status = this->_actual.isFalsy();
+		return *this;
+	}
+
 	STestAssert& toBe(long long expected) {
 		this->_status = (this->_expected = expected) == this->_actual ? 1 : 0;
 		return *this;

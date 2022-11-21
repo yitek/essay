@@ -1,7 +1,7 @@
 #pragma once
 #ifndef __TESTARRAY_H__
 #define __TESTARRAY_H__
-#include "../s-unit.h"
+#include "test-common.h"
 #include "../s-array.h"
 
 #ifdef __cplusplus 
@@ -13,13 +13,22 @@ extern "C" {
 } // end extern "C"
 #endif
 //
-void testSArrayConcat(SExpect expect);
-void testSArraySlice(SExpect expect);
+void testSArrayGetSet(SExpect expect ,int flag);
+// void testSArrayConcat(SExpect expect);
+// void testSArraySlice(SExpect expect);
 
 inline STestManager& testSArray() {
 	s_unit("SArray", [](STest subscribe) {
-		subscribe("concat",testSArrayConcat);
-		subscribe("slice", testSArraySlice);
+		subscribe("get/set", [](STest subscribe) {
+			subscribe("byval", [](SExpect expect) {
+				testSArrayGetSet(expect,0);
+			});
+			subscribe("byref", [](SExpect expect) {
+				testSArrayGetSet(expect, STypeFlags_Ref);
+				});
+		});
+		//subscribe("concat",testSArrayConcat);
+		//subscribe("slice", testSArraySlice);
 	});
 	return s_unit;
 };

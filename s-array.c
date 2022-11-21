@@ -3,13 +3,13 @@
 #include "s-machine.h"
 SArray* s_array_set(SArray* const self, s_size index, void* item) {
 	if (index >= self->length) return 0;
-	const SType* itemType = s_typeItemType(s_type((void*)self));
-	s_byte* pValue = (s_byte*)(self->buffer + s_type_byvalSize(itemType) * index);
-	if (itemType->flags & STypeFlags_ByVal) {
-		s_mem_copy(item, pValue, itemType->size);
+	const SType* itemType = s_type_itemType(s_type((void*)self));
+	s_byte* pValue = (s_byte*)(self->buffer + s_type_stackSize(itemType) * index);
+	if (s_type_flagByRef(itemType)) {
+		*(void**)pValue = item;
 	}
 	else {
-		*(void**)pValue = item;
+		s_mem_copy(item, pValue, itemType->size);
 	}
 }
 
@@ -29,10 +29,10 @@ SArray* s_array_concat(SArray* const self, SArray* other) {
 	if (!s_type_assignableFrom(selfItemType, otherItemType)) return 0;
 	SArray* arr = (SArray*)heap->newarr(heap, selfType, length);
 	int needStep = 0;
-	if (selfItemType->flags & STypeFlags_ByVal) {
+	if (s_type_flagByVal(selfItemType)) {
 		if (selfItemType->size != otherItemType->size) needStep = 1;
 	}	
-	s_size itemSize = s_type_byvalSize(selfItemType);
+	s_size itemSize = s_type_stackSize(selfItemType);
 	s_size bytes = itemSize * self->length;
 	s_mem_copy(self->buffer, arr->buffer, bytes);
 
@@ -67,7 +67,7 @@ SArray* s_array_slice(SArray* const self, s_size start, s_size length) {
 	if (self == 0) return 0;
 	if (start + length >= self->length) return 0;
 	const SType* type = s_type(self);
-	s_size itemSize = s_type_byvalSize(s_type_itemType(type));
+	s_size itemSize = s_type_stackSize(s_type_itemType(type));
 	SHeap* heap = s_type_heap(type);
 	SArray* arr = (SArray*)heap->newobj(heap,type,length);
 	s_mem_copy(arr->buffer,self->buffer + start* itemSize,length* itemSize);

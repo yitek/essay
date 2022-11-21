@@ -42,6 +42,12 @@
     <ClCompile Include="uts\test-array.cpp">
       <Filter>源文件\uts</Filter>
     </ClCompile>
+    <ClCompile Include="uts\test-type.cpp">
+      <Filter>源文件\uts</Filter>
+    </ClCompile>
+    <ClCompile Include="uts\test-common.cpp">
+      <Filter>源文件\uts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="s-unit.h">
@@ -63,6 +69,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="uts\test-array.h">
+      <Filter>头文件\uts</Filter>
+    </ClInclude>
+    <ClInclude Include="uts\test-type.h">
+      <Filter>头文件\uts</Filter>
+    </ClInclude>
+    <ClInclude Include="uts\test-common.h">
       <Filter>头文件\uts</Filter>
     </ClInclude>
   </ItemGroup>

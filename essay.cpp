@@ -3,13 +3,17 @@
 
 #include <iostream>
 #include "uts/test-test.h"
+#include "uts/test-type.h"
 #include "uts/test-heap.h"
+#include "uts/test-array.h"
 
 int main()
 {
     std::cout << "Hello Essay!\n";
     // testTest().execute();
+    testSType();
     testSHeap();
+    testSArray();
     s_unit();
 }
 

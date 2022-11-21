@@ -18,7 +18,10 @@ extern "C" {
 	}
 
 	inline void* s_array_get(SArray* const self, s_size index) {
-		return (index >= self->length)?0:(void*)(self->buffer + s_type_byvalSize(s_type_itemType(s_type(self))) * index);
+		if (index >= self->length) return 0;
+		const SType* itemType = s_type_itemType(s_type(self));
+		if (s_type_flagByRef(itemType)) return (void*)(self->buffer + sizeof(void*) * index);
+		return  (void*)(self->buffer + s_type_stackSize(itemType) * index);
 	}
 
 	SArray* s_array_set(SArray* const self, s_size index, void* item);

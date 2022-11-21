@@ -133,17 +133,21 @@
     <ClCompile Include="s-type.c" />
     <ClCompile Include="essay.cpp" />
     <ClCompile Include="uts\test-array.cpp" />
+    <ClCompile Include="uts\test-common.cpp" />
     <ClCompile Include="uts\test-heap.cpp" />
     <ClCompile Include="s-unit.cpp" />
+    <ClCompile Include="uts\test-type.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="s-array.h" />
     <ClInclude Include="s-heap.h" />
     <ClInclude Include="s-type.h" />
     <ClInclude Include="uts\test-array.h" />
+    <ClInclude Include="uts\test-common.h" />
     <ClInclude Include="uts\test-heap.h" />
     <ClInclude Include="uts\test-test.h" />
     <ClInclude Include="s-unit.h" />
+    <ClInclude Include="uts\test-type.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
